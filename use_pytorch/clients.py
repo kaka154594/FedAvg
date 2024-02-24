@@ -5,22 +5,22 @@ from torch.utils.data import DataLoader
 from getData import GetDataSet
 
 
-class client(object):
+class client(object):#该类有数据集和设备编号两项属性。有localUpdate一个方法。
     def __init__(self, trainDataSet, dev):
         self.train_ds = trainDataSet
         self.dev = dev
-        self.train_dl = None
-        self.local_parameters = None
+        self.train_dl = None#临时变量，DataLoader，数据加载器。
+        self.local_parameters = None#临时变量
 
-    def localUpdate(self, localEpoch, localBatchSize, Net, lossFun, opti, global_parameters):
-        Net.load_state_dict(global_parameters, strict=True)
-        self.train_dl = DataLoader(self.train_ds, batch_size=localBatchSize, shuffle=True)
+    def localUpdate(self, localEpoch, localBatchSize, Net, lossFun, opti, global_parameters):#localEpoch本地第几次迭代，总共迭代E次是说定了的。BatchSize,这也是固定的。
+        Net.load_state_dict(global_parameters, strict=True)#加载神经网络
+        self.train_dl = DataLoader(self.train_ds, batch_size=localBatchSize, shuffle=True)#取该节点batch大小的数据，这里是pytorch的库函数调用，见手册
         for epoch in range(localEpoch):
             for data, label in self.train_dl:
                 data, label = data.to(self.dev), label.to(self.dev)
-                preds = Net(data)
-                loss = lossFun(preds, label)
-                loss.backward()
+                preds = Net(data)#预测结果，正向传播第一步
+                loss = lossFun(preds, label)#正向传播第二步
+                loss.backward()#反向传播
                 opti.step()
                 opti.zero_grad()
 
